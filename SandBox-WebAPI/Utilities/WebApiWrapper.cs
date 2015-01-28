@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -33,7 +34,16 @@ namespace SandBox_WebAPI.Utilities
         {
             get
             {
-                return List != null ? List.Count : 0;
+                if (List != null)
+                {
+                    if (List is ICollection)
+                        return List.Count;
+                    else
+                        return 1;
+                }
+                else
+                    return 0;
+
             }
         }
     }

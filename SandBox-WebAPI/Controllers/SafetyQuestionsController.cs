@@ -91,14 +91,12 @@ namespace SandBox_WebAPI.Controllers
                 response.RequestUrl = Request.RequestUri.ToString();
                 response.Version = WebApi.Version;
                 response.Exception = null;
-                response.StatusCode = "200";
-                //Type propertyType = safetyQuestion.GetType().GetProperty(property).PropertyType;
-                object list=safetyQuestion.GetType().GetProperty(property).GetValue(safetyQuestion,null);
-                response.List = (dynamic)list;
-                //if (response.List == null)
-                //{
-                //    return NotFound();
-                //}
+                response.StatusCode = "200";                                
+                response.List = safetyQuestion.GetType().GetProperty(property).GetValue(safetyQuestion, null); ;
+                if (response.List == null)
+                {
+                    return NotFound();
+                }
             }
             catch (Exception e)
             {

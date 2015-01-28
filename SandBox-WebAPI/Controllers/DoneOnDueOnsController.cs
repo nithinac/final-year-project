@@ -78,9 +78,9 @@ namespace SandBox_WebAPI.Controllers
             return Ok(response);
         }
 
-        public async Task<IHttpActionResult> GetSafetyInstruction(int id, string property)
+        public async Task<IHttpActionResult> GetDoneOnDueOn(int id, string property)
         {
-            WebApiResponseList<Object> response = new WebApiResponseList<Object>();
+            WebApiResponseList<dynamic> response = new WebApiResponseList<dynamic>();
             try
             {
                 DoneOnDueOn doneOnDueOn = await db.DoneOnDueOns.Include(property).FirstOrDefaultAsync(d => d.ID == id);
@@ -94,7 +94,7 @@ namespace SandBox_WebAPI.Controllers
                 response.Version = WebApi.Version;
                 response.Exception = null;
                 response.StatusCode = "200";
-                response.List = doneOnDueOn.GetType().GetProperty(property).GetValue(doneOnDueOn,null) as List<Object>;
+                response.List = doneOnDueOn.GetType().GetProperty(property).GetValue(doneOnDueOn,null);
 
                 if (response.List == null)
                 {

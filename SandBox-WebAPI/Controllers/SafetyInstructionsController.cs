@@ -78,7 +78,7 @@ namespace SandBox_WebAPI.Controllers
 
         public async Task<IHttpActionResult> GetSafetyInstruction(int id,string property)
         {
-            WebApiResponseList<Object> response = new WebApiResponseList<Object>();
+            WebApiResponseList<dynamic> response = new WebApiResponseList<dynamic>();
             try
             {
                 SafetyInstruction safetyInstruction = await db.SafetyInstructions.Include(property).FirstOrDefaultAsync(d => d.ID == id);
@@ -92,7 +92,7 @@ namespace SandBox_WebAPI.Controllers
                 response.Version = WebApi.Version;
                 response.Exception = null;
                 response.StatusCode = "200";
-                response.List = (List<Object>)safetyInstruction.GetType().GetProperty(property).GetValue(safetyInstruction);
+                response.List = safetyInstruction.GetType().GetProperty(property).GetValue(safetyInstruction);
 
                 if (response.List == null)
                 {

@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
 using SandBox_WebAPI.Models;
+using System.Reflection;
+using SandBox_WebAPI.Utilities;
 
 namespace SandBox_WebAPI.Controllers
 {
@@ -18,22 +20,94 @@ namespace SandBox_WebAPI.Controllers
         private SandBoxContext db = new SandBoxContext();
 
         // GET: api/DoneOnDueOns
-        public IQueryable<DoneOnDueOn> GetDoneOnDueOns()
+        public WebApiResponseList<DoneOnDueOn> GetDoneOnDueOns()
         {
-            return db.DoneOnDueOns.Include("Checklist");
+
+            WebApiResponseList<DoneOnDueOn> response = new WebApiResponseList<DoneOnDueOn>();
+            try
+            {
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.List = db.DoneOnDueOns.ToList();
+            }
+            catch(Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return response;
+            //return db.DoneOnDueOns.Include("Checklist");
+            
         }
 
         // GET: api/DoneOnDueOns/5
-        [ResponseType(typeof(DoneOnDueOn))]
+        [ResponseType(typeof(WebApiResponse<DoneOnDueOn>))]
         public async Task<IHttpActionResult> GetDoneOnDueOn(int id)
         {
-            DoneOnDueOn doneOnDueOn = await db.DoneOnDueOns.Include("Checklist").FirstOrDefaultAsync(d=>d.ID==id);
-            if (doneOnDueOn == null)
-            {
-                return NotFound();
-            }
+            WebApiResponse<DoneOnDueOn> response = new WebApiResponse<DoneOnDueOn>();
+            try
+            {                
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Data = await db.DoneOnDueOns.FindAsync(id);
+                response.Exception = null;
+                response.StatusCode = "200";
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
 
-            return Ok(doneOnDueOn);
+                response.Includes = new Dictionary<string, string>();
+                foreach (var property in typeof(DoneOnDueOn).GetProperties())
+                {
+                    Type propertyType = property.PropertyType;
+                    if (!(propertyType.IsPrimitive || propertyType == typeof(string) || propertyType == typeof(DateTime)))
+                    {
+                        System.IO.File.WriteAllText("E:\\log.txt", propertyType+"\n \n"+propertyType.MemberType + " : " + propertyType.IsPrimitive + " ,,, " + (propertyType == typeof(string)) + " ,,, " + (propertyType== typeof(DateTime)));
+                        response.Includes.Add(property.Name, response.RequestUrl + "/" + property.Name);
+                    }
+
+                }
+            }
+            catch(Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
+        }
+
+        public async Task<IHttpActionResult> GetSafetyInstruction(int id, string property)
+        {
+            WebApiResponse<Object> response = new WebApiResponse<Object>();
+            try
+            {
+                DoneOnDueOn doneOnDueOn = await db.DoneOnDueOns.Include(property).FirstOrDefaultAsync(d=>d.ID==id);
+
+                if (doneOnDueOn == null)
+                {
+                    return NotFound();
+                }
+
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;                
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.Data = doneOnDueOn.GetType().GetProperty(property).GetValue(doneOnDueOn);
+
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
         }
 
         // PUT: api/DoneOnDueOns/5

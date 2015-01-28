@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
 using SandBox_WebAPI.Models;
+using SandBox_WebAPI.Utilities;
 
 namespace SandBox_WebAPI.Controllers
 {
@@ -18,24 +19,91 @@ namespace SandBox_WebAPI.Controllers
         private SandBoxContext db = new SandBoxContext();
 
         // GET: api/SafetyInstructions
-        public IQueryable<SafetyInstruction> GetSafetyInstructions()
+        public WebApiResponseList<SafetyInstruction> GetSafetyInstructions()
         {
-            return db.SafetyInstructions.Include("Attachment").Include("Attachment.Content");
-            
+            WebApiResponseList<SafetyInstruction> response = new WebApiResponseList<SafetyInstruction>();
+            try
+            {
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.List = db.SafetyInstructions.ToList();
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return response;
+            //return db.SafetyInstructions.Include("Attachment").Include("Attachment.Content");
+
         }
 
         // GET: api/SafetyInstructions/5
-        [ResponseType(typeof(SafetyInstruction))]
+        [ResponseType(typeof(WebApiResponse<SafetyInstruction>))]
         public async Task<IHttpActionResult> GetSafetyInstruction(int id)
         {
-            SafetyInstruction safetyInstruction = await db.SafetyInstructions.Include("Attachment").Include("Attachment.Content").FirstOrDefaultAsync(s=>s.Id==id);
-            if (safetyInstruction == null)
+            WebApiResponse<SafetyInstruction> response = new WebApiResponse<SafetyInstruction>();
+            try
             {
-                return NotFound();
-            }
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Data = await db.SafetyInstructions.FindAsync(id);
+                response.Exception = null;
+                response.StatusCode = "200";
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
 
-            return Ok(safetyInstruction);
+                response.Includes = new Dictionary<string, string>();
+                foreach (var property in typeof(SafetyInstruction).GetProperties())
+                {
+                    Type propertyType = property.PropertyType;
+                    if (!(propertyType.IsPrimitive || propertyType == typeof(string) || propertyType == typeof(DateTime)))
+                    {
+                        response.Includes.Add(property.Name, response.RequestUrl + "/" + property.Name);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
         }
+
+        public async Task<IHttpActionResult> GetSafetyInstruction(int id,string property)
+        {
+            WebApiResponse<Object> response=new WebApiResponse<Object>();
+            try
+            {
+                SafetyInstruction safetyInstruction = await db.SafetyInstructions.Include(property).FirstOrDefaultAsync(s=>s.Id==id);
+                if(safetyInstruction==null)
+                {
+                    return NotFound();
+                }
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;             
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.Data = safetyInstruction.GetType().GetProperty(property).GetValue(safetyInstruction);
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
+        }
+
 
         // PUT: api/SafetyInstructions/5
         [ResponseType(typeof(void))]
@@ -73,7 +141,7 @@ namespace SandBox_WebAPI.Controllers
         }
 
         // POST: api/SafetyInstructions
-        [ResponseType(typeof(SafetyInstruction))]
+        [ResponseType(typeof(WebApiResponse<SafetyInstruction>))]
         public async Task<IHttpActionResult> PostSafetyInstruction(SafetyInstructionViewModel safetyInstructionView)
         {
             if (!ModelState.IsValid)

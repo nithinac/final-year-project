@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
 using SandBox_WebAPI.Models;
-
+using SandBox_WebAPI.Utilities;
 namespace SandBox_WebAPI.Controllers
 {
     public class SafetyQuestionsController : ApiController
@@ -18,22 +18,88 @@ namespace SandBox_WebAPI.Controllers
         private SandBoxContext db = new SandBoxContext();
 
         // GET: api/SafetyQuestions
-        public IQueryable<SafetyQuestion> GetSafetyQuestions()
+        public WebApiResponseList<SafetyQuestion> GetSafetyQuestions()
         {
-            return db.SafetyQuestions.Include("Options");
+            WebApiResponseList<SafetyQuestion> response = new WebApiResponseList<SafetyQuestion>();
+            try
+            {
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.List = db.SafetyQuestions.ToList();
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return response;
+            //return db.SafetyQuestions.Include("Options");
         }
 
         // GET: api/SafetyQuestions/5
-        [ResponseType(typeof(SafetyQuestion))]
+        [ResponseType(typeof(WebApiResponse<SafetyQuestion>))]
         public async Task<IHttpActionResult> GetSafetyQuestion(int id)
         {
-            SafetyQuestion safetyQuestion = await db.SafetyQuestions.Include("Options").FirstOrDefaultAsync(s=>s.ID==id);
-            if (safetyQuestion == null)
+            WebApiResponse<SafetyQuestion> response = new WebApiResponse<SafetyQuestion>();
+            try
             {
-                return NotFound();
-            }
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;
+                response.Data = await db.SafetyQuestions.FindAsync(id);
+                response.Exception = null;
+                response.StatusCode = "200";
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
 
-            return Ok(safetyQuestion);
+                response.Includes = new Dictionary<string, string>();
+                foreach (var property in typeof(SafetyQuestion).GetProperties())
+                {
+                    Type propertyType = property.PropertyType;
+                    if (!(propertyType.IsPrimitive || propertyType == typeof(string) || propertyType == typeof(DateTime)))
+                    {                        
+                        response.Includes.Add(property.Name, response.RequestUrl + "/" + property.Name);
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
+        }
+
+        public async Task<IHttpActionResult> GetSafetyQuestion(int id, string property)
+        {
+            WebApiResponse<Object> response = new WebApiResponse<Object>();
+            try
+            {
+                SafetyQuestion safetyQuestion = await db.SafetyQuestions.Include(property).FirstOrDefaultAsync(s => s.ID == id);
+                if (safetyQuestion == null)
+                {
+                    return NotFound();
+                }
+                response.RequestUrl = Request.RequestUri.ToString();
+                response.Version = WebApi.Version;               
+                response.Exception = null;
+                response.StatusCode = "200";
+                response.Data = safetyQuestion.GetType().GetProperty(property).GetValue(safetyQuestion);
+                if (response.Data == null)
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception e)
+            {
+                response.Exception = e;
+                response.StatusCode = "500";
+            }
+            return Ok(response);
         }
 
         // PUT: api/SafetyQuestions/5

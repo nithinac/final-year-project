@@ -7,53 +7,26 @@ using System.Web;
 
 namespace SandBox_WebAPI.Models
 {
-    //public class ResponseBase<T>
-    //{
-    //    public string Version { get; set; }
-    //    public string Classname { get { return typeof(T).Name; } }
-    //    public Exception Exception { get; set; }
 
-    //    public string StatusCode { get; set; }
-
-    //    public string RequestUrl { get; }
-    //}
-    //public class WebApiResponse<T> :ResponseBase<T>
-    //{
-    //    public T Data { get; set; }
-
-    //    public Dictionary<string,string> Includes { get; set; }
-    //}
-    //public class WebApiResponseList<T> : ResponseBase<T>
-    //{
-    //    public List<T> List { get; set; }
-    //    public int Count
-    //    {
-    //        get
-    //        {
-    //            return List != null ? List.Count : 0;
-    //        }
-    //    }
-
-    //}
     public class Option
     {
         public Option()
         {
 
         }
-        public Option(String text)
+        public Option(string text)
         {
             Text = text;
         }
         public int ID { get; set; }
-        public String Text { get; set; }
+        public string Text { get; set; }
     }
 
     [KnownType(typeof(SafetyQuestion))]
     public class SafetyQuestion
     {      
         public int ID { get; set; }
-        public String Question { get; set; }
+        public string Question { get; set; }
         public ICollection<Option> Options { get; set; }
         public int Answer { get; set; }
     }

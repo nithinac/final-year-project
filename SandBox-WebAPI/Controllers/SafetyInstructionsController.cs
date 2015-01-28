@@ -78,20 +78,23 @@ namespace SandBox_WebAPI.Controllers
 
         public async Task<IHttpActionResult> GetSafetyInstruction(int id,string property)
         {
-            WebApiResponse<Object> response=new WebApiResponse<Object>();
+            WebApiResponseList<Object> response = new WebApiResponseList<Object>();
             try
             {
-                SafetyInstruction safetyInstruction = await db.SafetyInstructions.Include(property).FirstOrDefaultAsync(s=>s.Id==id);
-                if(safetyInstruction==null)
+                SafetyInstruction safetyInstruction = await db.SafetyInstructions.Include(property).FirstOrDefaultAsync(d => d.ID == id);
+
+                if (safetyInstruction == null)
                 {
                     return NotFound();
                 }
+
                 response.RequestUrl = Request.RequestUri.ToString();
-                response.Version = WebApi.Version;             
+                response.Version = WebApi.Version;
                 response.Exception = null;
                 response.StatusCode = "200";
-                response.Data = safetyInstruction.GetType().GetProperty(property).GetValue(safetyInstruction);
-                if (response.Data == null)
+                response.List = (List<Object>)safetyInstruction.GetType().GetProperty(property).GetValue(safetyInstruction);
+
+                if (response.List == null)
                 {
                     return NotFound();
                 }
@@ -102,6 +105,8 @@ namespace SandBox_WebAPI.Controllers
                 response.StatusCode = "500";
             }
             return Ok(response);
+
+
         }
 
 
@@ -114,7 +119,7 @@ namespace SandBox_WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != safetyInstruction.Id)
+            if (id != safetyInstruction.ID)
             {
                 return BadRequest();
             }
@@ -163,7 +168,7 @@ namespace SandBox_WebAPI.Controllers
             db.SafetyInstructions.Add(safetyInstruction);
             await db.SaveChangesAsync();
 
-            return CreatedAtRoute("DefaultApi", new { id = safetyInstruction.Id }, safetyInstruction);
+            return CreatedAtRoute("DefaultApi", new { id = safetyInstruction.ID }, safetyInstruction);
         }
 
         // DELETE: api/SafetyInstructions/5
@@ -193,7 +198,7 @@ namespace SandBox_WebAPI.Controllers
 
         private bool SafetyInstructionExists(int id)
         {
-            return db.SafetyInstructions.Count(e => e.Id == id) > 0;
+            return db.SafetyInstructions.Count(e => e.ID == id) > 0;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace SandBox_WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != contentType.Id)
+            if (id != contentType.ID)
             {
                 return BadRequest();
             }
@@ -86,7 +86,7 @@ namespace SandBox_WebAPI.Controllers
             db.ContentTypes.Add(contentType);
             await db.SaveChangesAsync();
 
-            return CreatedAtRoute("DefaultApi", new { id = contentType.Id }, contentType);
+            return CreatedAtRoute("DefaultApi", new { id = contentType.ID }, contentType);
         }
 
         // DELETE: api/ContentType/5
@@ -116,7 +116,7 @@ namespace SandBox_WebAPI.Controllers
 
         private bool ContentTypeExists(int id)
         {
-            return db.ContentTypes.Count(e => e.Id == id) > 0;
+            return db.ContentTypes.Count(e => e.ID == id) > 0;
         }
     }
 }

@@ -11,6 +11,8 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using SandBox_WebAPI.Models;
 using SandBox_WebAPI.Utilities;
+using System.Collections;
+
 namespace SandBox_WebAPI.Controllers
 {
     public class SafetyQuestionsController : ApiController
@@ -75,24 +77,28 @@ namespace SandBox_WebAPI.Controllers
         }
 
         public async Task<IHttpActionResult> GetSafetyQuestion(int id, string property)
-        {
-            WebApiResponse<Object> response = new WebApiResponse<Object>();
+        {                        
+            WebApiResponseList<dynamic> response = new WebApiResponseList<dynamic>();
             try
             {
-                SafetyQuestion safetyQuestion = await db.SafetyQuestions.Include(property).FirstOrDefaultAsync(s => s.ID == id);
+                SafetyQuestion safetyQuestion = await db.SafetyQuestions.Include(property).FirstOrDefaultAsync(d => d.ID == id);
+
                 if (safetyQuestion == null)
                 {
                     return NotFound();
                 }
+
                 response.RequestUrl = Request.RequestUri.ToString();
-                response.Version = WebApi.Version;               
+                response.Version = WebApi.Version;
                 response.Exception = null;
                 response.StatusCode = "200";
-                response.Data = safetyQuestion.GetType().GetProperty(property).GetValue(safetyQuestion);
-                if (response.Data == null)
-                {
-                    return NotFound();
-                }
+                //Type propertyType = safetyQuestion.GetType().GetProperty(property).PropertyType;
+                object list=safetyQuestion.GetType().GetProperty(property).GetValue(safetyQuestion,null);
+                response.List = (dynamic)list;
+                //if (response.List == null)
+                //{
+                //    return NotFound();
+                //}
             }
             catch (Exception e)
             {
@@ -100,6 +106,7 @@ namespace SandBox_WebAPI.Controllers
                 response.StatusCode = "500";
             }
             return Ok(response);
+
         }
 
         // PUT: api/SafetyQuestions/5

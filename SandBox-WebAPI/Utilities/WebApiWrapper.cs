@@ -28,7 +28,7 @@ namespace SandBox_WebAPI.Utilities
     }
     public class WebApiResponseList<T> : ResponseBase<T>
     {
-        public List<T> List { get; set; }
+        public dynamic List { get; set; }
         public int Count
         {
             get

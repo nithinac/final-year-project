@@ -64,8 +64,7 @@ namespace SandBox_WebAPI.Controllers
                 {
                     Type propertyType = property.PropertyType;
                     if (!(propertyType.IsPrimitive || propertyType == typeof(string) || propertyType == typeof(DateTime)))
-                    {
-                        System.IO.File.WriteAllText("E:\\log.txt", propertyType+"\n \n"+propertyType.MemberType + " : " + propertyType.IsPrimitive + " ,,, " + (propertyType == typeof(string)) + " ,,, " + (propertyType== typeof(DateTime)));
+                    {                      
                         response.Includes.Add(property.Name, response.RequestUrl + "/" + property.Name);
                     }
 
@@ -81,10 +80,10 @@ namespace SandBox_WebAPI.Controllers
 
         public async Task<IHttpActionResult> GetSafetyInstruction(int id, string property)
         {
-            WebApiResponse<Object> response = new WebApiResponse<Object>();
+            WebApiResponseList<Object> response = new WebApiResponseList<Object>();
             try
             {
-                DoneOnDueOn doneOnDueOn = await db.DoneOnDueOns.Include(property).FirstOrDefaultAsync(d=>d.ID==id);
+                DoneOnDueOn doneOnDueOn = await db.DoneOnDueOns.Include(property).FirstOrDefaultAsync(d => d.ID == id);
 
                 if (doneOnDueOn == null)
                 {
@@ -92,12 +91,12 @@ namespace SandBox_WebAPI.Controllers
                 }
 
                 response.RequestUrl = Request.RequestUri.ToString();
-                response.Version = WebApi.Version;                
+                response.Version = WebApi.Version;
                 response.Exception = null;
                 response.StatusCode = "200";
-                response.Data = doneOnDueOn.GetType().GetProperty(property).GetValue(doneOnDueOn);
+                response.List = doneOnDueOn.GetType().GetProperty(property).GetValue(doneOnDueOn,null) as List<Object>;
 
-                if (response.Data == null)
+                if (response.List == null)
                 {
                     return NotFound();
                 }
@@ -108,6 +107,8 @@ namespace SandBox_WebAPI.Controllers
                 response.StatusCode = "500";
             }
             return Ok(response);
+
+
         }
 
         // PUT: api/DoneOnDueOns/5

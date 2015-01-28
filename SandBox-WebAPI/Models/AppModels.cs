@@ -32,14 +32,14 @@ namespace SandBox_WebAPI.Models
     }
     public class SafetyInstruction
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public string Description { get; set; }
         public Attachment Attachment { get; set; }
     }
 
     public class Attachment
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public string Path { get; set; }
 
         public string FileName { get; set; }
@@ -48,7 +48,7 @@ namespace SandBox_WebAPI.Models
 
     public class ContentType
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public string Extension { get; set; }
         public string Type { get; set; }
         //public SafetyInstruction SafetyInstruction { get; set; }
